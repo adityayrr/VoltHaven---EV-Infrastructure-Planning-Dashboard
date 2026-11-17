@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>VoltHaven — New Haven EV Infrastructure Planning</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════════
+         HEADER — Global Navigation
+    ═══════════════════════════════════════════════ -->
+    <header class="app-header">
+        <div class="header-left">
+            <span class="logo-text">VOLTHAVEN</span>
+            <span class="logo-divider">|</span>
+            <span class="logo-subtitle">New Haven</span>
+        </div>
+        <div class="header-right">
+            <span class="user-label">City Planner: <strong>A. Ramirez</strong></span>
+            <button class="btn-text sign-out-btn">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════
+         MAIN WORKSPACE — Map + Simulator
+    ═══════════════════════════════════════════════ -->
+    <main class="workspace">
+
+        <!-- ——— Left: Interactive Spatial Map ——— -->
+        <section class="panel map-panel" aria-label="Spatial Map">
+
+            <!-- Map Filter Bar -->
+            <div class="map-filters">
+                <div class="filter-group">
+                    <span class="filter-label">Heatmaps:</span>
+                    <button class="filter-btn active" data-layer="traffic">Traffic</button>
+                    <button class="filter-btn" data-layer="grid">Grid</button>
+                    <button class="filter-btn" data-layer="residential">Residential</button>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Stations:</span>
+                    <button class="filter-btn" data-filter="existing">Existing</button>
+                    <button class="filter-btn" data-filter="proposed">Proposed</button>
+                    <button class="filter-btn active" data-filter="all">Show All</button>
+                </div>
+            </div>
+
+            <!-- Leaflet Map Container -->
+            <div id="map-container"></div>
+
+            <!-- Node Detail Popup (shown on marker click) -->
+            <div id="node-detail" class="node-detail hidden">
+                <div class="node-detail-header">
+                    <span id="node-detail-title"></span>
+                    <button class="btn-text node-detail-close">Close</button>
+                </div>
+                <div id="node-detail-body"></div>
+            </div>
+        </section>
+
+        <!-- ——— Right: Demand & Load Simulator ——— -->
+        <section class="panel simulator-panel" aria-label="Demand Simulator">
+
+            <h2 class="panel-title">ML Demand Simulation</h2>
+
+            <!-- Simulation Controls -->
+            <div class="sim-controls">
+
+                <div class="control-group">
+                    <label class="control-label" for="ev-adoption-slider">
+                        Projected EV Adoption
+                        <span class="control-value" id="ev-adoption-value">38%</span>
+                    </label>
+                    <input type="range" id="ev-adoption-slider" min="0" max="100" value="38" class="slider">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label" for="priority-select">Target User Priority</label>
+                    <select id="priority-select" class="select-input">
+                        <option value="balanced" selected>Balanced</option>
+                        <option value="commuter">Commuter-Heavy</option>
+                        <option value="delivery">Delivery Fleets</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label" for="time-select">Simulation Time</label>
+                    <select id="time-select" class="select-input">
+                        <option value="peak" selected>Peak Hour (5 PM)</option>
+                        <option value="morning">Morning Rush (8 AM)</option>
+                        <option value="offpeak">Off-Peak (2 AM)</option>
+                    </select>
+                </div>
+
+                <button class="btn-run-sim" id="run-sim-btn">Run Simulation</button>
+            </div>
+
+            <!-- Demand Chart -->
+            <div class="chart-section">
+                <h3 class="chart-title">24-Hour Power Demand (kW) vs. Grid Limit</h3>
+                <div class="chart-container">
+                    <canvas id="demand-chart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <span class="legend-item">
+                        <span class="legend-swatch swatch-load"></span> Predicted Load
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-swatch swatch-limit"></span> Substation A Max
+                    </span>
+                </div>
+            </div>
+
+            <!-- Grid Risk Indicator -->
+            <div class="grid-risk">
+                <span class="risk-label">Grid Risk:</span>
+                <span class="risk-level risk-low" id="risk-low">LOW</span>
+                <span class="risk-sep">/</span>
+                <span class="risk-level risk-moderate active" id="risk-moderate">MODERATE</span>
+                <span class="risk-sep">/</span>
+                <span class="risk-level risk-high" id="risk-high">HIGH</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- ═══════════════════════════════════════════════
+         LOWER SECTION — BI Insights & Node Inventory
+    ═══════════════════════════════════════════════ -->
+    <section class="insights-section" aria-label="BI Insights and Inventory">
+
+        <!-- KPI Cards -->
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <span class="kpi-label">Total Proposed Stations</span>
+                <span class="kpi-value" id="kpi-stations">35</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Daily Energy (MWh)</span>
+                <span class="kpi-value" id="kpi-energy">42.5</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Avg Grid Headroom</span>
+                <span class="kpi-value kpi-highlight" id="kpi-headroom">22%</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Annual CO₂ Reduced (Tons)</span>
+                <span class="kpi-value kpi-positive" id="kpi-co2">1,200</span>
+            </div>
+        </div>
+
+        <!-- Node Inventory -->
+        <div class="inventory-section">
+            <div class="inventory-header">
+                <h2 class="inventory-title">Node Inventory</h2>
+                <div class="inventory-controls">
+                    <input type="text" id="inventory-search" class="search-input" placeholder="Search nodes...">
+                    <select id="inventory-filter" class="select-input select-sm">
+                        <option value="all">All Types</option>
+                        <option value="dcfast">DC Fast</option>
+                        <option value="level2">Level-2</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="inventory-table" id="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Node ID</th>
+                            <th>Location</th>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Est. Load (kW)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="inventory-footer">
+                <span class="row-count" id="row-count">Showing 0 nodes</span>
+                <button class="btn-add-station" id="add-station-btn">Add New Station</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════
+         SCRIPTS
+    ═══════════════════════════════════════════════ -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
