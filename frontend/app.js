@@ -4,13 +4,15 @@
    Backend-integrated with graceful local fallback
    ═══════════════════════════════════════════════════════════ */
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://volthaven-backend.onrender.com';
+
 (function () {
     'use strict';
 
     // ─────────────────────────────────────────────
     // API CONFIGURATION
     // ─────────────────────────────────────────────
-    const API_BASE = 'http://127.0.0.1:8000/api';
+    const API_BASE = `${API_BASE_URL}/api`;
     let backendAvailable = false;
 
     // ─────────────────────────────────────────────
@@ -18,14 +20,14 @@
     // ─────────────────────────────────────────────
 
     const FALLBACK_STATIONS = [
-        { id: 'P-01', lat: 41.2810, lng: -72.9220, location: 'Long Wharf',        type: 'DC Fast', type_cat: 'dcfast',  priority: 'Commuter', load: 150, score: 94, fast: 4, l2: 8,  note: 'Commuter Priority',    low_cap: false, status: 'existing' },
-        { id: 'P-02', lat: 41.3085, lng: -72.9285, location: 'Yale Science Hill', type: 'Level-2', type_cat: 'level2',  priority: 'Resident', load: 48,  score: 78, fast: 0, l2: 12, note: 'Resident Overnight',   low_cap: true,  status: 'proposed' },
-        { id: 'P-03', lat: 41.2985, lng: -72.9265, location: 'Union Station',     type: 'DC Fast', type_cat: 'dcfast',  priority: 'Transit',  load: 200, score: 91, fast: 6, l2: 4,  note: 'Transit Hub Anchor',   low_cap: false, status: 'existing' },
-        { id: 'P-04', lat: 41.3050, lng: -72.9360, location: 'Broadway District', type: 'Level-2', type_cat: 'level2',  priority: 'Retail',   load: 36,  score: 65, fast: 0, l2: 6,  note: 'Retail District',      low_cap: false, status: 'proposed' },
-        { id: 'P-05', lat: 41.2930, lng: -72.9020, location: 'Fair Haven',        type: 'DC Fast', type_cat: 'dcfast',  priority: 'Delivery', load: 180, score: 87, fast: 4, l2: 6,  note: 'Delivery Fleet Depot', low_cap: false, status: 'existing' },
-        { id: 'P-06', lat: 41.3140, lng: -72.9230, location: 'Prospect Hill',     type: 'Level-2', type_cat: 'level2',  priority: 'Resident', load: 42,  score: 72, fast: 0, l2: 8,  note: 'Residential Cluster',  low_cap: false, status: 'proposed' },
-        { id: 'P-07', lat: 41.2870, lng: -72.9340, location: 'City Point',        type: 'DC Fast', type_cat: 'dcfast',  priority: 'Commuter', load: 120, score: 83, fast: 3, l2: 4,  note: 'Commuter Corridor',    low_cap: false, status: 'proposed' },
-        { id: 'P-08', lat: 41.3010, lng: -72.9160, location: 'Wooster Square',    type: 'Level-2', type_cat: 'level2',  priority: 'Resident', load: 38,  score: 68, fast: 0, l2: 6,  note: 'Residential Infill',   low_cap: false, status: 'proposed' },
+        { id: 'P-01', lat: 28.6304, lng: 77.2177, location: 'Connaught Place',  type: 'DC Fast', type_cat: 'dcfast',  priority: 'Commuter', load: 150, score: 94, fast: 4, l2: 8,  note: 'Commuter Priority',    low_cap: false, status: 'existing' },
+        { id: 'P-02', lat: 28.5494, lng: 77.2001, location: 'Hauz Khas',        type: 'Level-2', type_cat: 'level2',  priority: 'Resident', load: 48,  score: 78, fast: 0, l2: 12, note: 'Resident Overnight',   low_cap: true,  status: 'proposed' },
+        { id: 'P-03', lat: 28.5494, lng: 77.2527, location: 'Nehru Place',      type: 'DC Fast', type_cat: 'dcfast',  priority: 'Transit',  load: 200, score: 91, fast: 6, l2: 4,  note: 'Transit Hub Anchor',   low_cap: false, status: 'existing' },
+        { id: 'P-04', lat: 28.5523, lng: 77.0293, location: 'Dwarka',           type: 'Level-2', type_cat: 'level2',  priority: 'Retail',   load: 36,  score: 65, fast: 0, l2: 6,  note: 'Retail District',      low_cap: false, status: 'proposed' },
+        { id: 'P-05', lat: 28.5484, lng: 77.1213, location: 'Aerocity',         type: 'DC Fast', type_cat: 'dcfast',  priority: 'Delivery', load: 180, score: 87, fast: 4, l2: 6,  note: 'Delivery Fleet Depot', low_cap: false, status: 'existing' },
+        { id: 'P-06', lat: 28.6515, lng: 77.1906, location: 'Karol Bagh',       type: 'Level-2', type_cat: 'level2',  priority: 'Resident', load: 42,  score: 72, fast: 0, l2: 8,  note: 'Residential Cluster',  low_cap: false, status: 'proposed' },
+        { id: 'P-07', lat: 28.5683, lng: 77.2201, location: 'South Extension',  type: 'DC Fast', type_cat: 'dcfast',  priority: 'Commuter', load: 120, score: 83, fast: 3, l2: 4,  note: 'Commuter Corridor',    low_cap: false, status: 'proposed' },
+        { id: 'P-08', lat: 28.7360, lng: 77.1130, location: 'Rohini',           type: 'Level-2', type_cat: 'level2',  priority: 'Resident', load: 38,  score: 68, fast: 0, l2: 6,  note: 'Residential Infill',   low_cap: false, status: 'proposed' },
     ];
 
     const FALLBACK_DEMAND_PROFILES = {
@@ -38,6 +40,17 @@
 
     // Live station list — populated from backend or fallback
     let stations = [];
+
+    // ─────────────────────────────────────────────
+    // UTILITY — Debounce
+    // ─────────────────────────────────────────────
+    function debounce(fn, ms) {
+        let timer;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), ms);
+        };
+    }
 
     // ─────────────────────────────────────────────
     // API HELPERS
@@ -118,47 +131,47 @@
     }
 
     // ─────────────────────────────────────────────
-    // ZONE DATA
+    // ZONE DATA (Delhi Metropolitan Area)
     // ─────────────────────────────────────────────
 
     const ZONES = [
-        { name: 'Yale Campus (Resident Heavy)',  coords: [[41.3120,-72.9330],[41.3120,-72.9230],[41.3040,-72.9230],[41.3040,-72.9330]], color: '#3d8b40' },
-        { name: 'Long Wharf (Commuter Route)',   coords: [[41.2840,-72.9270],[41.2840,-72.9170],[41.2780,-72.9170],[41.2780,-72.9270]], color: '#c8a020' },
-        { name: 'Union Station (Transit Hub)',    coords: [[41.3010,-72.9300],[41.3010,-72.9230],[41.2960,-72.9230],[41.2960,-72.9300]], color: '#5a88a8' },
+        { name: 'Connaught Place (Commercial Hub)', coords: [[28.6380, 77.2080], [28.6380, 77.2300], [28.6220, 77.2300], [28.6220, 77.2080]], color: '#c8a020' },
+        { name: 'South Delhi (Residential / Cultural)', coords: [[28.5600, 77.1850], [28.5600, 77.2250], [28.5350, 77.2250], [28.5350, 77.1850]], color: '#3d8b40' },
+        { name: 'Dwarka (Transit & Sub-City)', coords: [[28.5850, 77.0150], [28.5850, 77.0650], [28.5400, 77.0650], [28.5400, 77.0150]], color: '#5a88a8' },
     ];
 
     // ─────────────────────────────────────────────
-    // HEATMAP LAYER DATA
+    // HEATMAP LAYER DATA (Delhi)
     // ─────────────────────────────────────────────
 
-    // Traffic corridors (I-95, I-91, Long Wharf connector)
+    // Traffic corridors (Ring Road, Outer Ring Road, NH-48 Airport Expressway)
     const TRAFFIC_CORRIDORS = [
-        { name: 'I-95 Corridor',       coords: [[41.2750,-72.9400],[41.2780,-72.9300],[41.2820,-72.9200],[41.2870,-72.9050],[41.2930,-72.8950]], color: '#c8a020' },
-        { name: 'I-91 Corridor',       coords: [[41.2800,-72.9260],[41.2900,-72.9250],[41.3000,-72.9240],[41.3100,-72.9220],[41.3180,-72.9200]], color: '#d4860a' },
-        { name: 'Long Wharf Connector', coords: [[41.2790,-72.9270],[41.2810,-72.9230],[41.2830,-72.9180],[41.2850,-72.9130]],                  color: '#c8a020' },
+        { name: 'Inner Ring Road', coords: [[28.5950, 77.1650], [28.5700, 77.2100], [28.5720, 77.2500], [28.6250, 77.2500], [28.6650, 77.2300], [28.6680, 77.1700], [28.6100, 77.1600]], color: '#c8a020' },
+        { name: 'Outer Ring Road', coords: [[28.5450, 77.1800], [28.5450, 77.2600], [28.6100, 77.2900], [28.7100, 77.2000], [28.7100, 77.1200]], color: '#d4860a' },
+        { name: 'NH-48 Airport Corridor', coords: [[28.6100, 77.1700], [28.5700, 77.1350], [28.5450, 77.1150], [28.5150, 77.0800]], color: '#c8a020' },
     ];
 
-    // Grid infrastructure
+    // Grid infrastructure (Delhi Sub-stations)
     const GRID_SUBSTATIONS = [
-        { name: 'Substation A', lat: 41.2900, lng: -72.9250, capacity: 300 },
-        { name: 'Substation B', lat: 41.3060, lng: -72.9300, capacity: 450 },
-        { name: 'Substation C', lat: 41.2980, lng: -72.9100, capacity: 350 },
+        { name: 'Mandir Marg Substation', lat: 28.6280, lng: 77.2000, capacity: 500 },
+        { name: 'Okhla Grid Substation', lat: 28.5350, lng: 77.2700, capacity: 450 },
+        { name: 'Dwarka Sector 8 Substation', lat: 28.5700, lng: 77.0600, capacity: 400 },
     ];
 
     const GRID_FEEDERS = [
-        { from: [41.2900,-72.9250], to: [41.2810,-72.9220], label: 'Feeder A1' },
-        { from: [41.2900,-72.9250], to: [41.2985,-72.9265], label: 'Feeder A2' },
-        { from: [41.3060,-72.9300], to: [41.3085,-72.9285], label: 'Feeder B1' },
-        { from: [41.3060,-72.9300], to: [41.3050,-72.9360], label: 'Feeder B2' },
-        { from: [41.2980,-72.9100], to: [41.2930,-72.9020], label: 'Feeder C1' },
-        { from: [41.2980,-72.9100], to: [41.3010,-72.9160], label: 'Feeder C2' },
+        { from: [28.6280, 77.2000], to: [28.6304, 77.2177], label: 'Feeder MM-CP' },
+        { from: [28.6280, 77.2000], to: [28.6515, 77.1906], label: 'Feeder MM-KB' },
+        { from: [28.5350, 77.2700], to: [28.5494, 77.2527], label: 'Feeder OK-NP' },
+        { from: [28.5350, 77.2700], to: [28.5683, 77.2201], label: 'Feeder OK-SE' },
+        { from: [28.5700, 77.0600], to: [28.5523, 77.0293], label: 'Feeder DW-S1' },
+        { from: [28.5700, 77.0600], to: [28.5484, 77.1213], label: 'Feeder DW-Aero' },
     ];
 
     // Residential zones
     const RESIDENTIAL_ZONES = [
-        { name: 'Yale Campus',    coords: [[41.3120,-72.9330],[41.3120,-72.9230],[41.3040,-72.9230],[41.3040,-72.9330]], color: '#3d8b40' },
-        { name: 'Prospect Hill',  coords: [[41.3170,-72.9270],[41.3170,-72.9190],[41.3110,-72.9190],[41.3110,-72.9270]], color: '#3d8b40' },
-        { name: 'Wooster Square', coords: [[41.3040,-72.9190],[41.3040,-72.9120],[41.2980,-72.9120],[41.2980,-72.9190]], color: '#3d8b40' },
+        { name: 'South Delhi Residential', coords: [[28.5500, 77.2100], [28.5500, 77.2400], [28.5200, 77.2400], [28.5200, 77.2100]], color: '#3d8b40' },
+        { name: 'Dwarka Residential', coords: [[28.5900, 77.0300], [28.5900, 77.0650], [28.5600, 77.0650], [28.5600, 77.0300]], color: '#3d8b40' },
+        { name: 'Rohini Residential', coords: [[28.7350, 77.0950], [28.7350, 77.1350], [28.7050, 77.1350], [28.7050, 77.0950]], color: '#3d8b40' },
     ];
 
     // ─────────────────────────────────────────────
@@ -166,8 +179,8 @@
     // ─────────────────────────────────────────────
 
     const map = L.map('map-container', {
-        center: [41.3000, -72.9240],
-        zoom: 14,
+        center: [28.6139, 77.2090],
+        zoom: 11,
         zoomControl: true,
         attributionControl: true
     });
@@ -358,7 +371,7 @@
         canvas.height = container.clientHeight - 24;
     }
 
-    function drawChart(data, gridLimit) {
+    function drawChart(data, gridLimit, maxHour = 23) {
         resizeCanvas();
         const w = canvas.width;
         const h = canvas.height;
@@ -405,11 +418,12 @@
         ctx.textAlign = 'left';
         ctx.fillText('GRID CAPACITY LIMIT', padLeft + 4, limitY - 6);
 
-        // Demand curve — segment-colored
+        // Demand curve — segment-colored up to maxHour
         ctx.lineWidth = 2;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
-        for (let i = 0; i < data.length - 1; i++) {
+        const renderLimit = Math.min(maxHour, data.length - 1);
+        for (let i = 0; i < renderLimit; i++) {
             const x1 = padLeft + (chartW / 23) * i;
             const y1 = padTop + chartH * (1 - data[i] / maxVal);
             const x2 = padLeft + (chartW / 23) * (i + 1);
@@ -420,18 +434,31 @@
             ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
         }
 
-        // Filled area under curve
-        ctx.globalAlpha = 0.06;
-        ctx.fillStyle = '#3d8b40';
-        ctx.beginPath();
-        ctx.moveTo(padLeft, padTop + chartH);
-        for (let i = 0; i < data.length; i++) {
-            ctx.lineTo(padLeft + (chartW / 23) * i, padTop + chartH * (1 - data[i] / maxVal));
+        // Current hour pulse/indicator node
+        if (renderLimit >= 0 && renderLimit < data.length) {
+            const curX = padLeft + (chartW / 23) * renderLimit;
+            const curY = padTop + chartH * (1 - data[renderLimit] / maxVal);
+            ctx.fillStyle = data[renderLimit] > gridLimit ? '#b83830' : data[renderLimit] > gridLimit * 0.8 ? '#c8a020' : '#1db954';
+            ctx.beginPath();
+            ctx.arc(curX, curY, 4, 0, Math.PI * 2);
+            ctx.fill();
         }
-        ctx.lineTo(padLeft + chartW, padTop + chartH);
-        ctx.closePath();
-        ctx.fill();
-        ctx.globalAlpha = 1;
+
+        // Filled area under curve up to maxHour
+        if (renderLimit > 0) {
+            ctx.globalAlpha = 0.08;
+            ctx.fillStyle = '#3d8b40';
+            ctx.beginPath();
+            ctx.moveTo(padLeft, padTop + chartH);
+            for (let i = 0; i <= renderLimit; i++) {
+                ctx.lineTo(padLeft + (chartW / 23) * i, padTop + chartH * (1 - data[i] / maxVal));
+            }
+            const lastX = padLeft + (chartW / 23) * renderLimit;
+            ctx.lineTo(lastX, padTop + chartH);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
     }
 
     // ─── Grid Risk Display ───
@@ -467,12 +494,25 @@
         const priority = document.getElementById('priority-select').value;
         const time     = document.getElementById('time-select').value;
 
+        // Show loading state in AI popup
+        const popupBody = document.getElementById('ai-popup-body');
+        const popup     = document.getElementById('ai-summary-popup');
+        popupBody.innerHTML = '<span class="ai-loading">AI is analyzing grid impact\u2026</span>';
+        popup.classList.remove('hidden');
+
         const result = await runSimulationAPI(adoption, priority, time);
         lastSimResult = result;
 
         drawChart(result.hourly_curve, result.grid_limit);
         updateGridRiskDisplay(result.grid_risk);
         updateKPIDisplay(result.kpi_metrics);
+
+        // Update AI summary popup
+        if (result.ai_summary && result.ai_summary.length > 0) {
+            popupBody.textContent = result.ai_summary;
+        } else {
+            popupBody.textContent = 'Simulation ran on local math model. AI servers currently busy.';
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -482,9 +522,11 @@
     const adoptionSlider = document.getElementById('ev-adoption-slider');
     const adoptionValue  = document.getElementById('ev-adoption-value');
 
+    const debouncedSimulation = debounce(runSimulation, 500);
+
     adoptionSlider.addEventListener('input', () => {
         adoptionValue.textContent = adoptionSlider.value + '%';
-        runSimulation();
+        debouncedSimulation();
     });
 
     document.getElementById('priority-select').addEventListener('change', runSimulation);
@@ -500,6 +542,152 @@
             btn.disabled = false;
         }, 400);
     });
+
+    // ─────────────────────────────────────────────
+    // 24-HOUR TIME-LAPSE ANIMATION
+    // ─────────────────────────────────────────────
+
+    let isAnimating = false;
+    let timelapseTimer = null;
+
+    const playTimelapseBtn = document.getElementById('play-timelapse-btn');
+    const timelapseClock   = document.getElementById('timelapse-clock');
+    const prioritySelect   = document.getElementById('priority-select');
+    const timeSelect       = document.getElementById('time-select');
+
+    function updateHeatmapOpacityForHour(hour, hourlyCurve) {
+        let factor = 0.5;
+        if (hourlyCurve && hourlyCurve.length === 24) {
+            const minL = Math.min(...hourlyCurve);
+            const maxL = Math.max(...hourlyCurve);
+            factor = (hourlyCurve[hour] - minL) / (maxL - minL || 1);
+        } else {
+            if (hour >= 17 && hour <= 21) factor = 0.95;
+            else if (hour >= 7 && hour <= 10) factor = 0.75;
+            else if (hour >= 0 && hour <= 5) factor = 0.2;
+            else factor = 0.5;
+        }
+
+        const strokeOpacity = 0.15 + factor * 0.75;  // 0.15 to 0.90
+        const fillOpacity   = 0.08 + factor * 0.45;  // 0.08 to 0.53
+        const strokeWidth   = 3 + factor * 5;        // 3 to 8
+
+        trafficLayerGroup.eachLayer(layer => {
+            if (layer.setStyle) layer.setStyle({ opacity: strokeOpacity, weight: strokeWidth });
+        });
+
+        residentialLayerGroup.eachLayer(layer => {
+            if (layer.setStyle) layer.setStyle({ opacity: strokeOpacity, fillOpacity: fillOpacity });
+        });
+
+        gridLayerGroup.eachLayer(layer => {
+            if (layer.setStyle) layer.setStyle({ opacity: strokeOpacity });
+        });
+    }
+
+    function resetHeatmapOpacity() {
+        trafficLayerGroup.eachLayer(layer => {
+            if (layer.setStyle) layer.setStyle({ opacity: 0.45, weight: 6 });
+        });
+        residentialLayerGroup.eachLayer(layer => {
+            if (layer.setStyle) layer.setStyle({ opacity: 0.6, fillOpacity: 0.22 });
+        });
+        gridLayerGroup.eachLayer(layer => {
+            if (layer.setStyle) layer.setStyle({ opacity: 0.5, weight: 2 });
+        });
+    }
+
+    function setControlsDisabled(disabled) {
+        const runSimBtn = document.getElementById('run-sim-btn');
+        if (runSimBtn) runSimBtn.disabled = disabled;
+        if (adoptionSlider) adoptionSlider.disabled = disabled;
+        if (prioritySelect) prioritySelect.disabled = disabled;
+        if (timeSelect) timeSelect.disabled = disabled;
+    }
+
+    function startTimelapse() {
+        if (isAnimating) return;
+        isAnimating = true;
+
+        setControlsDisabled(true);
+        if (playTimelapseBtn) {
+            playTimelapseBtn.textContent = '⏳ Playing...';
+            playTimelapseBtn.disabled = true;
+        }
+
+        if (timelapseClock) {
+            timelapseClock.textContent = '00:00';
+            timelapseClock.classList.remove('hidden');
+        }
+
+        const curve = (lastSimResult && lastSimResult.hourly_curve)
+            ? lastSimResult.hourly_curve
+            : FALLBACK_DEMAND_PROFILES.peak.balanced;
+        const gridLimit = (lastSimResult && lastSimResult.grid_limit)
+            ? lastSimResult.grid_limit
+            : GRID_LIMIT;
+
+        let currentHour = 0;
+
+        // Draw initial hour 0
+        drawChart(curve, gridLimit, 0);
+        updateHeatmapOpacityForHour(0, curve);
+
+        timelapseTimer = setInterval(() => {
+            currentHour++;
+
+            if (currentHour > 23) {
+                clearInterval(timelapseTimer);
+                timelapseTimer = null;
+                isAnimating = false;
+                setControlsDisabled(false);
+
+                if (playTimelapseBtn) {
+                    playTimelapseBtn.textContent = '▶ Play 24H';
+                    playTimelapseBtn.disabled = false;
+                }
+
+                if (lastSimResult) {
+                    drawChart(lastSimResult.hourly_curve, lastSimResult.grid_limit, 23);
+                    updateGridRiskDisplay(lastSimResult.grid_risk);
+                }
+                resetHeatmapOpacity();
+
+                // Keep clock briefly at 23:00 then hide
+                setTimeout(() => {
+                    if (!isAnimating && timelapseClock) {
+                        timelapseClock.classList.add('hidden');
+                        timelapseClock.textContent = '00:00';
+                    }
+                }, 1500);
+
+                return;
+            }
+
+            // Update clock display
+            const timeStr = `${String(currentHour).padStart(2, '0')}:00`;
+            if (timelapseClock) timelapseClock.textContent = timeStr;
+
+            // Progressive chart reveal
+            drawChart(curve, gridLimit, currentHour);
+
+            // Update Leaflet heatmaps dynamically
+            updateHeatmapOpacityForHour(currentHour, curve);
+
+            // Update live risk indicator
+            const curVal = curve[currentHour];
+            if (curVal > gridLimit) updateGridRiskDisplay('HIGH');
+            else if (curVal > gridLimit * 0.8) updateGridRiskDisplay('MODERATE');
+            else updateGridRiskDisplay('LOW');
+
+        }, 350); // 350ms per simulated hour
+    }
+
+    if (playTimelapseBtn) {
+        playTimelapseBtn.addEventListener('click', () => {
+            if (!isAnimating) startTimelapse();
+        });
+    }
 
     // ─────────────────────────────────────────────
     // INVENTORY TABLE
@@ -571,9 +759,175 @@
         }
     });
 
-    // Add New Station
-    document.getElementById('add-station-btn').addEventListener('click', () => {
-        alert('Add New Station\n(Integration point — creation form would open here)');
+    // ─────────────────────────────────────────────
+    // ADD NEW STATION MODAL
+    // ─────────────────────────────────────────────
+
+    const addStationModal = document.getElementById('add-station-modal');
+    const addStationForm  = document.getElementById('add-station-form');
+    const modalCloseBtn   = document.getElementById('modal-close-btn');
+    const modalCancelBtn  = document.getElementById('modal-cancel-btn');
+
+    function openAddModal() {
+        if (addStationModal) addStationModal.classList.remove('hidden');
+    }
+
+    function closeAddModal() {
+        if (addStationModal) addStationModal.classList.add('hidden');
+        if (addStationForm) addStationForm.reset();
+    }
+
+    document.getElementById('add-station-btn').addEventListener('click', openAddModal);
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeAddModal);
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeAddModal);
+
+    if (addStationModal) {
+        addStationModal.addEventListener('click', (e) => {
+            if (e.target === addStationModal) closeAddModal();
+        });
+    }
+
+    if (addStationForm) {
+        addStationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const typeVal = document.getElementById('station-type').value;
+            const newStation = {
+                id: document.getElementById('station-id').value.trim(),
+                location: document.getElementById('station-location').value.trim(),
+                load: parseInt(document.getElementById('station-capacity').value, 10),
+                type: typeVal,
+                type_cat: typeVal === 'DC Fast' ? 'dcfast' : 'level2',
+                priority: document.getElementById('station-priority').value,
+                lat: parseFloat(document.getElementById('station-lat').value),
+                lng: parseFloat(document.getElementById('station-lng').value),
+                score: 75,
+                fast: typeVal === 'DC Fast' ? 4 : 0,
+                l2: typeVal === 'Level-2' ? 6 : 2,
+                note: 'User Proposed',
+                low_cap: false,
+                status: 'proposed'
+            };
+
+            // Post to backend API
+            if (backendAvailable) {
+                const res = await apiFetch('/stations', {
+                    method: 'POST',
+                    body: JSON.stringify(newStation)
+                });
+                if (res) {
+                    await loadStations();
+                } else {
+                    stations.push(newStation);
+                }
+            } else {
+                stations.push(newStation);
+            }
+
+            buildStationMarkers();
+            renderTable();
+            closeAddModal();
+
+            // Pan to newly added station
+            map.flyTo([newStation.lat, newStation.lng], 14, { duration: 0.8 });
+        });
+    }
+
+    // ─────────────────────────────────────────────
+    // AGENTIC RAG COPILOT — Chatbot
+    // ─────────────────────────────────────────────
+
+    const chatLauncherBtn = document.getElementById('chat-toggle-btn');
+    const chatWindow      = document.getElementById('chat-window');
+    const chatCloseBtn    = document.getElementById('chat-close-btn');
+    const chatForm        = document.getElementById('chat-form');
+    const chatInput       = document.getElementById('chat-input');
+    const chatMessages    = document.getElementById('chat-messages');
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    if (chatLauncherBtn && chatWindow) {
+        chatLauncherBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+            if (!chatWindow.classList.contains('hidden') && chatInput) {
+                chatInput.focus();
+            }
+        });
+    }
+
+    if (chatCloseBtn && chatWindow) {
+        chatCloseBtn.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
+    }
+
+    if (chatForm && chatInput && chatMessages) {
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = chatInput.value.trim();
+            if (!query) return;
+
+            // Append user bubble
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg user-msg';
+            userMsg.innerHTML = `<div class="msg-bubble">${escapeHtml(query)}</div>`;
+            chatMessages.appendChild(userMsg);
+            chatInput.value = '';
+
+            // Append Thinking bubble
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'chat-msg ai-msg';
+            aiMsg.innerHTML = `<div class="msg-bubble"><em>Thinking...</em></div>`;
+            chatMessages.appendChild(aiMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Fetch from backend /api/chat
+            try {
+                let answer = null;
+                if (backendAvailable) {
+                    const res = await apiFetch('/chat', {
+                        method: 'POST',
+                        body: JSON.stringify({ query: query })
+                    });
+                    if (res && res.response) answer = res.response;
+                }
+
+                // If backend offline or didn't return, provide local RAG response
+                if (!answer) {
+                    const qLower = query.toLowerCase();
+                    if (qLower.includes('highest') || qLower.includes('max') || qLower.includes('capacity')) {
+                        const maxS = stations.reduce((prev, curr) => (curr.load > prev.load ? curr : prev), stations[0]);
+                        answer = `The station with the highest capacity is ${maxS.location} (${maxS.id}) at ${maxS.load} kW (${maxS.type}).`;
+                    } else if (qLower.includes('count') || qLower.includes('how many') || qLower.includes('total')) {
+                        answer = `There are currently ${stations.length} charging stations deployed or proposed in the Delhi network.`;
+                    } else {
+                        answer = `VoltHaven Copilot: Tracking ${stations.length} Delhi EV stations. Substation A capacity is ${GRID_LIMIT} kW. (Local fallback mode active).`;
+                    }
+                }
+
+                aiMsg.querySelector('.msg-bubble').textContent = answer;
+            } catch (err) {
+                aiMsg.querySelector('.msg-bubble').textContent = 'VoltHaven Copilot: Unable to process query at this time.';
+            }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    }
+
+    // ─────────────────────────────────────────────
+    // AI SUMMARY FAB — Toggle & Close
+    // ─────────────────────────────────────────────
+
+    document.getElementById('ai-fab-btn').addEventListener('click', () => {
+        document.getElementById('ai-summary-popup').classList.toggle('hidden');
+    });
+
+    document.getElementById('ai-popup-close').addEventListener('click', () => {
+        document.getElementById('ai-summary-popup').classList.add('hidden');
     });
 
     // ─────────────────────────────────────────────
