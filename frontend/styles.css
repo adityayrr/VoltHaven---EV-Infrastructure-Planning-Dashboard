@@ -1081,8 +1081,70 @@ input, select, button { font-family: inherit; }
     gap: 14px;
 }
 
-.modal-grid .form-group:nth-child(2) {
+.location-group {
     grid-column: span 2;
+    position: relative;
+}
+
+/* ─── Location Autocomplete Dropdown ─── */
+.location-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border-normal);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    z-index: 2200;
+}
+
+.location-dropdown.hidden {
+    display: none;
+}
+
+.location-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.15s, border-left-color 0.15s;
+    border-left: 3px solid transparent;
+}
+
+.location-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.location-dropdown-item:hover {
+    background: var(--bg-hover);
+    border-left-color: var(--green);
+}
+
+.location-item-main {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.location-item-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.location-dropdown-status {
+    padding: 12px 14px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    font-style: italic;
 }
 
 .form-group {
@@ -1365,4 +1427,81 @@ input, select, button { font-family: inherit; }
         width: 300px;
         height: 380px;
     }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OAUTH UI (Login Page)
+   ═══════════════════════════════════════════════════════════ */
+.login-divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    color: var(--text-muted);
+}
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+}
+.login-divider span {
+    padding: 0 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.oauth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.oauth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+    letter-spacing: 0.3px;
+}
+
+.oauth-icon {
+    flex-shrink: 0;
+}
+
+.oauth-google {
+    background: #ffffff;
+    color: #1f1f1f;
+    border: 1px solid #d1d5db;
+}
+.oauth-google:hover {
+    background: #f3f4f6;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+}
+.oauth-google:active {
+    transform: scale(0.98);
+}
+
+.oauth-github {
+    background: #24292e;
+    color: #ffffff;
+    border: 1px solid #444c56;
+}
+.oauth-github:hover {
+    background: #2f363d;
+    border-color: #6e7681;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.oauth-github:active {
+    transform: scale(0.98);
 }

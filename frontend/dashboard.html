@@ -212,12 +212,13 @@
                         <input type="text" id="station-id" placeholder="e.g. P-09" required>
                     </div>
                     <div class="form-group">
-                        <label for="station-location">Location Name</label>
-                        <input type="text" id="station-location" placeholder="e.g. Saket District Centre" required>
-                    </div>
-                    <div class="form-group">
                         <label for="station-capacity">Capacity (kW)</label>
                         <input type="number" id="station-capacity" min="10" max="1000" placeholder="e.g. 150" required>
+                    </div>
+                    <div class="form-group location-group">
+                        <label for="station-location">Location Name</label>
+                        <input type="text" id="station-location" placeholder="Search Delhi location (e.g. Saket, Connaught Place)..." autocomplete="off" required>
+                        <div id="location-dropdown" class="location-dropdown hidden"></div>
                     </div>
                     <div class="form-group">
                         <label for="station-type">Charger Type</label>
@@ -236,14 +237,8 @@
                             <option value="Delivery">Delivery</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="station-lat">Latitude</label>
-                        <input type="number" id="station-lat" step="any" placeholder="e.g. 28.5244" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="station-lng">Longitude</label>
-                        <input type="number" id="station-lng" step="any" placeholder="e.g. 77.2167" required>
-                    </div>
+                    <input type="hidden" id="station-lat">
+                    <input type="hidden" id="station-lng">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-text" id="modal-cancel-btn">Cancel</button>

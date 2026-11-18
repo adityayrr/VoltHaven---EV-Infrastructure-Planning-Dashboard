@@ -42,7 +42,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
     let stations = [];
 
     // ─────────────────────────────────────────────
-    // UTILITY — Debounce
+    // UTILITY — Debounce & Escape
     // ─────────────────────────────────────────────
     function debounce(fn, ms) {
         let timer;
@@ -50,6 +50,13 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
             clearTimeout(timer);
             timer = setTimeout(() => fn.apply(this, args), ms);
         };
+    }
+
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     // ─────────────────────────────────────────────
@@ -760,21 +767,34 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
     });
 
     // ─────────────────────────────────────────────
-    // ADD NEW STATION MODAL
+    // ADD NEW STATION MODAL & LOCATION AUTOCOMPLETE
     // ─────────────────────────────────────────────
 
-    const addStationModal = document.getElementById('add-station-modal');
-    const addStationForm  = document.getElementById('add-station-form');
-    const modalCloseBtn   = document.getElementById('modal-close-btn');
-    const modalCancelBtn  = document.getElementById('modal-cancel-btn');
+    const addStationModal  = document.getElementById('add-station-modal');
+    const addStationForm   = document.getElementById('add-station-form');
+    const modalCloseBtn    = document.getElementById('modal-close-btn');
+    const modalCancelBtn   = document.getElementById('modal-cancel-btn');
+    const locationInput    = document.getElementById('station-location');
+    const locationDropdown = document.getElementById('location-dropdown');
+    const stationLatInput  = document.getElementById('station-lat');
+    const stationLngInput  = document.getElementById('station-lng');
+
+    let locationAbortController = null;
 
     function openAddModal() {
         if (addStationModal) addStationModal.classList.remove('hidden');
+        if (locationInput) locationInput.focus();
     }
 
     function closeAddModal() {
         if (addStationModal) addStationModal.classList.add('hidden');
         if (addStationForm) addStationForm.reset();
+        if (locationDropdown) {
+            locationDropdown.innerHTML = '';
+            locationDropdown.classList.add('hidden');
+        }
+        if (stationLatInput) stationLatInput.value = '';
+        if (stationLngInput) stationLngInput.value = '';
     }
 
     document.getElementById('add-station-btn').addEventListener('click', openAddModal);
@@ -787,20 +807,136 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
         });
     }
 
+    // ─── Live Location Autocomplete (OSM Nominatim API) ───
+    async function searchLocation(query) {
+        if (!query || query.trim().length < 2) {
+            if (locationDropdown) {
+                locationDropdown.innerHTML = '';
+                locationDropdown.classList.add('hidden');
+            }
+            return;
+        }
+
+        const trimmed = query.trim();
+
+        if (locationAbortController) {
+            locationAbortController.abort();
+        }
+        locationAbortController = new AbortController();
+
+        if (locationDropdown) {
+            locationDropdown.innerHTML = '<div class="location-dropdown-status">Searching Delhi locations...</div>';
+            locationDropdown.classList.remove('hidden');
+        }
+
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(trimmed)}+Delhi`;
+            const res = await fetch(url, {
+                signal: locationAbortController.signal,
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+
+            if (!data || data.length === 0) {
+                if (locationDropdown) {
+                    locationDropdown.innerHTML = '<div class="location-dropdown-status">No locations found in Delhi</div>';
+                    locationDropdown.classList.remove('hidden');
+                }
+                return;
+            }
+
+            renderLocationResults(data);
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.warn('[VoltHaven] Nominatim search error:', err);
+            if (locationDropdown) {
+                locationDropdown.innerHTML = '<div class="location-dropdown-status">Unable to fetch location data</div>';
+            }
+        }
+    }
+
+    function renderLocationResults(items) {
+        if (!locationDropdown) return;
+        locationDropdown.innerHTML = '';
+
+        items.forEach(item => {
+            const parts = item.display_name.split(',').map(s => s.trim());
+            const shortName = item.name || parts[0];
+            const subName = parts.slice(1, 4).join(', ') || item.display_name;
+
+            const div = document.createElement('div');
+            div.className = 'location-dropdown-item';
+            div.innerHTML = `
+                <div class="location-item-main">${escapeHtml(shortName)}</div>
+                <div class="location-item-sub">${escapeHtml(subName)}</div>
+            `;
+
+            div.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectLocation(shortName, item.lat, item.lon);
+            });
+
+            locationDropdown.appendChild(div);
+        });
+
+        locationDropdown.classList.remove('hidden');
+    }
+
+    function selectLocation(name, lat, lon) {
+        if (locationInput) locationInput.value = name;
+        if (stationLatInput) stationLatInput.value = lat;
+        if (stationLngInput) stationLngInput.value = lon;
+        if (locationDropdown) {
+            locationDropdown.innerHTML = '';
+            locationDropdown.classList.add('hidden');
+        }
+    }
+
+    if (locationInput) {
+        const debouncedLocationSearch = debounce((q) => searchLocation(q), 500);
+        locationInput.addEventListener('input', (e) => {
+            debouncedLocationSearch(e.target.value);
+        });
+
+        locationInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && locationDropdown) {
+                locationDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (locationDropdown && !e.target.closest('.location-group')) {
+            locationDropdown.classList.add('hidden');
+        }
+    });
+
     if (addStationForm) {
         addStationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            let lat = parseFloat(stationLatInput ? stationLatInput.value : '');
+            let lng = parseFloat(stationLngInput ? stationLngInput.value : '');
+
+            // Fallback to coordinates in central Delhi NCT if submitted without selecting a suggestion
+            if (isNaN(lat) || isNaN(lng)) {
+                lat = 28.6139 + (Math.random() - 0.5) * 0.06;
+                lng = 77.2090 + (Math.random() - 0.5) * 0.06;
+            }
+
             const typeVal = document.getElementById('station-type').value;
             const newStation = {
                 id: document.getElementById('station-id').value.trim(),
-                location: document.getElementById('station-location').value.trim(),
+                location: (locationInput ? locationInput.value : '').trim(),
                 load: parseInt(document.getElementById('station-capacity').value, 10),
                 type: typeVal,
                 type_cat: typeVal === 'DC Fast' ? 'dcfast' : 'level2',
                 priority: document.getElementById('station-priority').value,
-                lat: parseFloat(document.getElementById('station-lat').value),
-                lng: parseFloat(document.getElementById('station-lng').value),
+                lat: parseFloat(lat.toFixed(4)),
+                lng: parseFloat(lng.toFixed(4)),
                 score: 75,
                 fast: typeVal === 'DC Fast' ? 4 : 0,
                 l2: typeVal === 'Level-2' ? 6 : 2,
@@ -843,12 +979,6 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
     const chatForm        = document.getElementById('chat-form');
     const chatInput       = document.getElementById('chat-input');
     const chatMessages    = document.getElementById('chat-messages');
-
-    function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
 
     if (chatLauncherBtn && chatWindow) {
         chatLauncherBtn.addEventListener('click', () => {
