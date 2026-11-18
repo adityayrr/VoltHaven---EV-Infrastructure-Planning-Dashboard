@@ -257,6 +257,7 @@
             var errorEl  = document.getElementById('login-error');
 
             if (username === 'admin' && password === 'admin123') {
+                localStorage.setItem('voltHavenAuth', 'true');
                 window.location.href = 'dashboard.html';
             } else {
                 errorEl.classList.remove('hidden');

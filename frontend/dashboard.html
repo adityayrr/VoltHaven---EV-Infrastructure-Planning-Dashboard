@@ -6,6 +6,11 @@
     <title>VoltHaven — Delhi EV Infrastructure Planning</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
+    <script>
+        if (!localStorage.getItem('voltHavenAuth')) {
+            window.location.href = 'index.html';
+        }
+    </script>
 </head>
 <body>
 
@@ -20,7 +25,7 @@
         </div>
         <div class="header-right">
             <span class="user-label">City Planner: <strong>A. Ramirez</strong></span>
-            <button class="btn-text sign-out-btn">Sign Out</button>
+            <button class="btn-text sign-out-btn" id="signout-btn">Sign Out</button>
         </div>
     </header>
 

@@ -1,3 +1,8 @@
+// Strict Auth Guard — check session immediately before running dashboard logic
+if (!localStorage.getItem('voltHavenAuth')) {
+    window.location.href = 'index.html';
+}
+
 /* ═══════════════════════════════════════════════════════════
    VoltHaven — Application Logic
    Interactive map, demand simulation, inventory management
@@ -1045,6 +1050,18 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
             }
 
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    }
+
+    // ─────────────────────────────────────────────
+    // AUTH & SIGNOUT
+    // ─────────────────────────────────────────────
+
+    const signoutBtn = document.getElementById('signout-btn') || document.querySelector('.sign-out-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('voltHavenAuth');
+            window.location.href = 'index.html';
         });
     }
 
